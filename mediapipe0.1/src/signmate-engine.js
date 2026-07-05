@@ -9,6 +9,54 @@ const HAND_ORDER = ["Left", "Right"];
 const DEFAULT_HAND_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 const DEFAULT_WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const modelPromises = new Map();
+let visionPromise = null;
+let handLandmarkerPromise = null;
+
+function loadModelData(modelUrl) {
+  if (!modelPromises.has(modelUrl)) {
+    const promise = fetch(modelUrl, { cache: "force-cache" })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`SignMate model load failed: HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .catch((error) => {
+        modelPromises.delete(modelUrl);
+        throw error;
+      });
+    modelPromises.set(modelUrl, promise);
+  }
+  return modelPromises.get(modelUrl);
+}
+
+function loadVisionRuntime() {
+  visionPromise ??= FilesetResolver.forVisionTasks(DEFAULT_WASM_URL).catch((error) => {
+    visionPromise = null;
+    throw error;
+  });
+  return visionPromise;
+}
+
+function loadHandLandmarker() {
+  handLandmarkerPromise ??= loadVisionRuntime()
+    .then((vision) =>
+      HandLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: DEFAULT_HAND_MODEL_URL,
+          delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numHands: 2,
+      }),
+    )
+    .catch((error) => {
+      handLandmarkerPromise = null;
+      throw error;
+    });
+  return handLandmarkerPromise;
+}
 
 export async function createSignMate(options) {
   const engine = new SignMateEngine(options);
@@ -61,31 +109,19 @@ class SignMateEngine {
   }
 
   async load() {
-    const [vision, model] = await Promise.all([
-      FilesetResolver.forVisionTasks(DEFAULT_WASM_URL),
+    const [handLandmarker, model] = await Promise.all([
+      loadHandLandmarker(),
       this.loadModel(),
     ]);
 
     this.model = model;
-    this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: DEFAULT_HAND_MODEL_URL,
-        delegate: "GPU",
-      },
-      runningMode: "VIDEO",
-      numHands: 2,
-    });
+    this.handLandmarker = handLandmarker;
 
     if (this.ctx) this.drawingUtils = new DrawingUtils(this.ctx);
   }
 
   async loadModel() {
-    const response = await fetch(this.modelUrl, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`SignMate model load failed: HTTP ${response.status}`);
-    }
-
-    const model = await response.json();
+    const model = await loadModelData(this.modelUrl);
     if (model.feature_size !== FEATURE_SIZE) {
       throw new Error(`Invalid feature_size: ${model.feature_size}`);
     }
@@ -117,10 +153,7 @@ class SignMateEngine {
 
   dispose() {
     this.stop();
-    if (this.handLandmarker) {
-      this.handLandmarker.close();
-      this.handLandmarker = null;
-    }
+    this.handLandmarker = null;
   }
 
   loop = () => {
