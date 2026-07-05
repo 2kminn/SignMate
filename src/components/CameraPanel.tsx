@@ -227,10 +227,10 @@ export function CameraPanel({
     >
       <video
         ref={videoRef}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
+        className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity ${
           isFrontCamera ? "scale-x-[-1]" : ""
         } ${
-          status === "active" || status === "initializing" ? "opacity-100" : "opacity-0"
+          status === "active" ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
         muted
