@@ -5,7 +5,7 @@ import {
   RotateCcw,
   X
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CameraPanel, type CameraStatus } from "../components/CameraPanel";
 import { ProgressBar } from "../components/ProgressBar";
 import type { SessionMode, SignInfo, SignResult } from "../types/sign";
@@ -39,6 +39,10 @@ export function CameraSessionPage({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
   const [cameraAttempt, setCameraAttempt] = useState(0);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
 
   const currentQuizSign = quizSigns[quizIndex] ?? selectedSign ?? signs[0] ?? null;
   const targetSign = mode === "quiz" ? currentQuizSign : selectedSign;
