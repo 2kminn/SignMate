@@ -8,7 +8,6 @@ import { OnboardingPage } from "./pages/OnboardingPage";
 import { QuizPage } from "./pages/QuizPage";
 import { TranslatePage } from "./pages/TranslatePage";
 import type { AppView, SessionMode, SignInfo, TabType } from "./types/sign";
-import { mockResult } from "./utils/mockResult";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>("translate");
@@ -54,7 +53,6 @@ export default function App() {
           signs={signs}
           onEnd={endCameraSession}
           onGoLearn={goToLearn}
-          mockResult={mockResult}
         />
       ) : (
         <>

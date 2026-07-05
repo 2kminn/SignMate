@@ -6,9 +6,13 @@ import {
   X
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { CameraPanel, type CameraStatus } from "../components/CameraPanel";
+import {
+  CameraPanel,
+  type CameraStatus,
+  type SignPrediction
+} from "../components/CameraPanel";
 import { ProgressBar } from "../components/ProgressBar";
-import type { SessionMode, SignInfo, SignResult } from "../types/sign";
+import type { SessionMode, SignInfo } from "../types/sign";
 import { saveQuizResult } from "../utils/storage";
 
 interface CameraSessionPageProps {
@@ -17,7 +21,6 @@ interface CameraSessionPageProps {
   signs: SignInfo[];
   onEnd: () => void;
   onGoLearn: () => void;
-  mockResult: SignResult;
 }
 
 export function CameraSessionPage({
@@ -25,8 +28,7 @@ export function CameraSessionPage({
   selectedSign,
   signs,
   onEnd,
-  onGoLearn,
-  mockResult
+  onGoLearn
 }: CameraSessionPageProps) {
   const quizSigns = useMemo(() => {
     if (mode !== "quiz") return signs;
@@ -39,6 +41,14 @@ export function CameraSessionPage({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
   const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [prediction, setPrediction] = useState<SignPrediction>({
+    label: "wait",
+    name: "인식 대기 중",
+    confidence: 0,
+    rawLabel: "wait",
+    handCount: 0,
+    accepted: false
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -47,7 +57,7 @@ export function CameraSessionPage({
   const currentQuizSign = quizSigns[quizIndex] ?? selectedSign ?? signs[0] ?? null;
   const targetSign = mode === "quiz" ? currentQuizSign : selectedSign;
   const matchesTarget =
-    targetSign !== null && mockResult.detected && mockResult.label === targetSign.label;
+    targetSign !== null && prediction.accepted && prediction.label === targetSign.label;
 
   const title =
     mode === "translate"
@@ -65,7 +75,7 @@ export function CameraSessionPage({
           : "제시된 단어를 수어로 표현해보세요.";
   const feedback =
     mode === "translate"
-      ? mockResult.detected
+      ? prediction.accepted
         ? "해석 결과를 확인했어요."
         : "손이 잘 보이도록 카메라에 맞춰주세요."
       : mode === "practice"
@@ -79,6 +89,7 @@ export function CameraSessionPage({
   const retry = () => {
     setCameraActive(true);
     setCameraAttempt((current) => current + 1);
+    setPrediction((current) => ({ ...current, confidence: 0, accepted: false }));
   };
 
   const nextQuestion = () => {
@@ -189,20 +200,21 @@ export function CameraSessionPage({
           active={cameraActive}
           attempt={cameraAttempt}
           onStatusChange={setCameraStatus}
+          onPrediction={setPrediction}
         />
         <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-sign-light/80 bg-white/90 p-3.5 shadow-lg backdrop-blur">
           <div className="mb-2 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-sign-sub">현재 해석</p>
               <p className="text-lg font-extrabold text-sign-deep">
-                {mockResult.detected ? mockResult.name : "인식 대기 중"}
+                {prediction.accepted ? prediction.name : "인식 대기 중"}
               </p>
             </div>
             <span className="text-sm font-extrabold text-sign-main">
-              {Math.round(mockResult.confidence * 100)}%
+              {Math.round(prediction.confidence * 100)}%
             </span>
           </div>
-          <ProgressBar value={mockResult.confidence} label="일치도" />
+          <ProgressBar value={prediction.confidence} label="일치도" />
         </div>
       </div>
 

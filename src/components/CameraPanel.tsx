@@ -3,12 +3,37 @@ import { useEffect, useRef, useState } from "react";
 
 export type CameraStatus = "idle" | "requesting" | "active" | "denied" | "unavailable" | "error";
 
+export interface SignPrediction {
+  label: string;
+  name: string;
+  confidence: number;
+  rawLabel: string;
+  handCount: number;
+  accepted: boolean;
+}
+
 interface CameraPanelProps {
   compact?: boolean;
   active: boolean;
   attempt?: number;
   onStatusChange?: (status: CameraStatus) => void;
+  onPrediction?: (prediction: SignPrediction) => void;
 }
+
+interface SignMateEngine {
+  start: () => Promise<void>;
+  dispose: () => void;
+}
+
+type CreateSignMate = (options: {
+  videoElement: HTMLVideoElement;
+  canvasElement: HTMLCanvasElement;
+  modelUrl: string;
+  threshold: number;
+  smoothingWindow: number;
+  onPrediction: (prediction: SignPrediction) => void;
+  onError: (error: unknown) => void;
+}) => Promise<SignMateEngine>;
 
 const statusText: Record<CameraStatus, string> = {
   idle: "카메라 실행 대기",
@@ -26,9 +51,16 @@ const getErrorState = (error: unknown): CameraStatus => {
   return "error";
 };
 
-export function CameraPanel({ compact = false, active, attempt = 0, onStatusChange }: CameraPanelProps) {
+export function CameraPanel({
+  compact = false,
+  active,
+  attempt = 0,
+  onStatusChange,
+  onPrediction
+}: CameraPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<SignMateEngine | null>(null);
   const [status, setStatus] = useState<CameraStatus>("idle");
 
   useEffect(() => {
@@ -38,50 +70,66 @@ export function CameraPanel({ compact = false, active, attempt = 0, onStatusChan
   useEffect(() => {
     let cancelled = false;
 
-    const stopCamera = () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-      if (videoRef.current) videoRef.current.srcObject = null;
+    const stopEngine = () => {
+      engineRef.current?.dispose();
+      engineRef.current = null;
     };
 
     if (!active) {
-      stopCamera();
+      stopEngine();
       setStatus("idle");
-      return stopCamera;
+      return stopEngine;
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("unavailable");
-      return stopCamera;
+      return stopEngine;
     }
 
     setStatus("requesting");
-    navigator.mediaDevices
-      .getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
-        audio: false
-      })
-      .then(async (stream) => {
+
+    const startEngine = async () => {
+      try {
+        if (!videoRef.current || !canvasRef.current) return;
+        const engineUrl = "/signmate/src/signmate-engine.js";
+        const { createSignMate } = (await import(/* @vite-ignore */ engineUrl)) as {
+          createSignMate: CreateSignMate;
+        };
+        const engine = await createSignMate({
+          videoElement: videoRef.current,
+          canvasElement: canvasRef.current,
+          modelUrl: "/signmate/assets/signmate_model.json",
+          threshold: 0.7,
+          smoothingWindow: 12,
+          onPrediction: (prediction) => {
+            if (!cancelled) onPrediction?.(prediction);
+          },
+          onError: (error) => {
+            console.error("MediaPipe inference failed", error);
+            if (!cancelled) setStatus("error");
+          }
+        });
+
         if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
+          engine.dispose();
           return;
         }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-        setStatus("active");
-      })
-      .catch((error: unknown) => {
+
+        engineRef.current = engine;
+        await engine.start();
+        if (!cancelled) setStatus("active");
+      } catch (error: unknown) {
         if (!cancelled) setStatus(getErrorState(error));
-      });
+      }
+    };
+
+    void startEngine();
 
     return () => {
       cancelled = true;
-      stopCamera();
+      stopEngine();
     };
-  }, [active, attempt]);
+  }, [active, attempt, onPrediction]);
 
   const hasError = status === "denied" || status === "unavailable" || status === "error";
 
@@ -102,8 +150,9 @@ export function CameraPanel({ compact = false, active, attempt = 0, onStatusChan
         playsInline
         aria-label="실시간 카메라 영상"
       />
-      {/* MediaPipe 담당자는 이 canvas에 랜드마크를 그릴 수 있습니다. */}
+      {/* MediaPipe가 감지한 손 랜드마크를 카메라 영상 위에 표시합니다. */}
       <canvas
+        ref={canvasRef}
         className="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"
         aria-hidden="true"
       />

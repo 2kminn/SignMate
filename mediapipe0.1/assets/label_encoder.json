@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "feature_size": 126,
+  "classes": [
+    {
+      "index": 0,
+      "id": 0,
+      "label": "wait",
+      "name": "대기"
+    },
+    {
+      "index": 1,
+      "id": 1,
+      "label": "hello",
+      "name": "안녕하세요"
+    },
+    {
+      "index": 2,
+      "id": 2,
+      "label": "thanks",
+      "name": "감사합니다"
+    },
+    {
+      "index": 3,
+      "id": 3,
+      "label": "sorry",
+      "name": "죄송합니다"
+    },
+    {
+      "index": 4,
+      "id": 4,
+      "label": "okay",
+      "name": "괜찮아요"
+    },
+    {
+      "index": 5,
+      "id": 5,
+      "label": "help",
+      "name": "도와주세요"
+    },
+    {
+      "index": 6,
+      "id": 7,
+      "label": "no",
+      "name": "아니요"
+    },
+    {
+      "index": 7,
+      "id": 8,
+      "label": "water",
+      "name": "물"
+    },
+    {
+      "index": 8,
+      "id": 10,
+      "label": "restroom",
+      "name": "화장실"
+    },
+    {
+      "index": 9,
+      "id": 12,
+      "label": "home",
+      "name": "집"
+    },
+    {
+      "index": 10,
+      "id": 14,
+      "label": "name",
+      "name": "이름"
+    }
+  ]
+}
