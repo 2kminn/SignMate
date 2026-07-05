@@ -16,6 +16,15 @@ export async function createSignMate(options) {
   return engine;
 }
 
+export async function preloadSignMateRuntime(modelUrl) {
+  const response = await fetch(modelUrl, { cache: "force-cache" });
+  if (!response.ok) {
+    throw new Error(`SignMate model preload failed: HTTP ${response.status}`);
+  }
+}
+
+globalThis.SignMateMediaPipe = { createSignMate, preloadSignMateRuntime };
+
 class SignMateEngine {
   constructor({
     videoElement,

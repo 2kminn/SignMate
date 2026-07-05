@@ -142,13 +142,10 @@ export function CameraPanel({
 
   useEffect(() => {
     let cancelled = false;
-    let pendingStream: MediaStream | null = null;
 
     const stopEngine = () => {
       engineRef.current?.dispose();
       engineRef.current = null;
-      pendingStream?.getTracks().forEach((track) => track.stop());
-      pendingStream = null;
       if (videoRef.current) videoRef.current.srcObject = null;
     };
 
@@ -177,13 +174,6 @@ export function CameraPanel({
           audio: false
         };
 
-        pendingStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-        if (cancelled) {
-          stopEngine();
-          return;
-        }
-        videoRef.current.srcObject = pendingStream;
-        await videoRef.current.play();
         if (!cancelled) setStatus("initializing");
 
         const { createSignMate } = await loadSignMateEngine();

@@ -74,14 +74,14 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
   return (
     <main className="flex h-[100dvh] min-h-[100svh] max-h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#F0FDF4_0%,#F9FAFB_72%)] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="relative flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           {stepIndex > 0 && (
             <button
               type="button"
               onClick={goToPreviousStep}
               aria-label="이전 설명으로 돌아가기"
-              className="onboarding-back-button flex h-9 w-9 items-center justify-center rounded-full border border-sign-border bg-white text-sign-deep shadow-sm transition active:scale-95 active:bg-sign-soft"
+              className="onboarding-back-button absolute left-0 flex h-9 w-9 items-center justify-center rounded-full border border-sign-border bg-white text-sign-deep shadow-sm transition active:scale-95 active:bg-sign-soft"
             >
               <ChevronLeft size={21} aria-hidden="true" />
             </button>
@@ -93,7 +93,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             SignMate
           </span>
         </div>
-        <span className="text-xs font-bold text-sign-sub">{stepIndex + 1} / {steps.length}</span>
+        <span className="absolute right-0 text-xs font-bold text-sign-sub">{stepIndex + 1} / {steps.length}</span>
       </div>
 
       <section
