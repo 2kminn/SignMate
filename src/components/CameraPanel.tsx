@@ -1,4 +1,4 @@
-import { AlertCircle, Camera, CameraOff, LoaderCircle } from "lucide-react";
+import { AlertCircle, Camera, CameraOff, LoaderCircle, SwitchCamera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export type CameraStatus = "idle" | "requesting" | "active" | "denied" | "unavailable" | "error";
@@ -31,6 +31,8 @@ type CreateSignMate = (options: {
   modelUrl: string;
   threshold: number;
   smoothingWindow: number;
+  mirrorCamera: boolean;
+  mediaConstraints: MediaStreamConstraints;
   onPrediction: (prediction: SignPrediction) => void;
   onError: (error: unknown) => void;
 }) => Promise<SignMateEngine>;
@@ -95,6 +97,8 @@ export function CameraPanel({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SignMateEngine | null>(null);
   const [status, setStatus] = useState<CameraStatus>("idle");
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const isFrontCamera = facingMode === "user";
 
   useEffect(() => {
     onStatusChange?.(status);
@@ -131,6 +135,15 @@ export function CameraPanel({
           modelUrl: `${import.meta.env.BASE_URL}signmate/assets/signmate_model.json`,
           threshold: 0.7,
           smoothingWindow: 12,
+          mirrorCamera: isFrontCamera,
+          mediaConstraints: {
+            video: {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 960 }
+            },
+            audio: false
+          },
           onPrediction: (prediction) => {
             if (!cancelled) onPrediction?.(prediction);
           },
@@ -159,7 +172,7 @@ export function CameraPanel({
       cancelled = true;
       stopEngine();
     };
-  }, [active, attempt, onPrediction]);
+  }, [active, attempt, facingMode, isFrontCamera, onPrediction]);
 
   const hasError = status === "denied" || status === "unavailable" || status === "error";
 
@@ -172,7 +185,9 @@ export function CameraPanel({
     >
       <video
         ref={videoRef}
-        className={`absolute inset-0 h-full w-full scale-x-[-1] object-cover transition-opacity ${
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
+          isFrontCamera ? "scale-x-[-1]" : ""
+        } ${
           status === "active" ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
@@ -183,7 +198,9 @@ export function CameraPanel({
       {/* MediaPipe가 감지한 손 랜드마크를 카메라 영상 위에 표시합니다. */}
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1]"
+        className={`pointer-events-none absolute inset-0 h-full w-full ${
+          isFrontCamera ? "scale-x-[-1]" : ""
+        }`}
         aria-hidden="true"
       />
 
@@ -231,6 +248,18 @@ export function CameraPanel({
         />
         {statusText[status]}
       </div>
+      <button
+        type="button"
+        onClick={() =>
+          setFacingMode((current) => (current === "user" ? "environment" : "user"))
+        }
+        disabled={status === "requesting"}
+        aria-label={isFrontCamera ? "후면 카메라로 전환" : "전면 카메라로 전환"}
+        title={isFrontCamera ? "후면 카메라로 전환" : "전면 카메라로 전환"}
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-sign-deep shadow backdrop-blur transition hover:bg-white active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+      >
+        <SwitchCamera size={21} aria-hidden="true" />
+      </button>
       <span className="camera-corner left-5 top-[4.5rem] border-l-[3px] border-t-[3px]" />
       <span className="camera-corner right-5 top-[4.5rem] border-r-[3px] border-t-[3px]" />
       <span className="camera-corner bottom-5 left-5 border-b-[3px] border-l-[3px]" />
