@@ -74,6 +74,16 @@ button {
   max-width: min(280px, 31vh);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .onboarding-back-button:hover {
+    background: #ecfdf5;
+  }
+
+  .onboarding-primary-button:hover {
+    background: #047857;
+  }
+}
+
 @media (max-height: 740px) {
   .onboarding-slide {
     padding-bottom: 0.75rem;

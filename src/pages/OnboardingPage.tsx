@@ -81,7 +81,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               type="button"
               onClick={goToPreviousStep}
               aria-label="이전 설명으로 돌아가기"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-sign-border bg-white text-sign-deep shadow-sm transition hover:bg-sign-soft"
+              className="onboarding-back-button flex h-9 w-9 items-center justify-center rounded-full border border-sign-border bg-white text-sign-deep shadow-sm transition active:scale-95 active:bg-sign-soft"
             >
               <ChevronLeft size={21} aria-hidden="true" />
             </button>
@@ -134,7 +134,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
         <button
           type="button"
           onClick={continueOnboarding}
-          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-sign-main px-5 font-extrabold text-white shadow-[0_12px_28px_rgba(16,185,129,.24)] transition hover:bg-sign-dark"
+          className="onboarding-primary-button flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-sign-main px-5 font-extrabold text-white shadow-[0_12px_28px_rgba(16,185,129,.24)] transition active:scale-[0.98] active:bg-sign-dark"
         >
           {isLast ? "시작하기" : "다음"}
           <ChevronRight size={20} aria-hidden="true" />
