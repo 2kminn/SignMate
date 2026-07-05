@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   RotateCcw,
   X
@@ -11,7 +12,6 @@ import {
   type CameraStatus,
   type SignPrediction
 } from "../components/CameraPanel";
-import { ProgressBar } from "../components/ProgressBar";
 import type { SessionMode, SignInfo } from "../types/sign";
 import { saveQuizResult } from "../utils/storage";
 
@@ -41,6 +41,7 @@ export function CameraSessionPage({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
   const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [guideExpanded, setGuideExpanded] = useState(false);
   const [prediction, setPrediction] = useState<SignPrediction>({
     label: "wait",
     name: "인식 대기 중",
@@ -186,9 +187,39 @@ export function CameraSessionPage({
             </span>
           </div>
         ) : mode === "practice" && selectedSign ? (
-          <p className="text-sm font-bold text-sign-deep">
-            목표 <span className="ml-2 text-sign-main">{selectedSign.name}</span>
-          </p>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-bold text-sign-deep">
+                목표 <span className="ml-2 text-sign-main">{selectedSign.name}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setGuideExpanded((current) => !current)}
+                aria-expanded={guideExpanded}
+                aria-controls="practice-sign-guide"
+                className="flex min-h-10 items-center gap-1 rounded-full bg-sign-soft px-3 text-xs font-extrabold text-sign-dark transition active:scale-95"
+              >
+                {guideExpanded ? "동작 접기" : "동작 보기"}
+                <ChevronDown
+                  className={`transition-transform ${guideExpanded ? "rotate-180" : ""}`}
+                  size={16}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            {guideExpanded && (
+              <div id="practice-sign-guide" className="mt-3 border-t border-sign-light pt-3">
+                <div className="flex h-52 items-center justify-center overflow-hidden rounded-2xl bg-white">
+                  <img
+                    src={`${import.meta.env.BASE_URL}sign-images/${selectedSign.label}.png`}
+                    alt={`${selectedSign.name} 수어 동작 설명`}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <p className="mt-3 text-sm leading-6 text-sign-sub">{selectedSign.description}</p>
+              </div>
+            )}
+          </div>
         ) : (
           <p className="text-sm font-bold text-sign-deep">손 전체가 화면 안에 보이게 맞춰주세요.</p>
         )}
@@ -203,18 +234,10 @@ export function CameraSessionPage({
           onPrediction={setPrediction}
         />
         <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-sign-light/80 bg-white/90 p-3.5 shadow-lg backdrop-blur">
-          <div className="mb-2 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-sign-sub">현재 해석</p>
-              <p className="text-lg font-extrabold text-sign-deep">
-                {prediction.accepted ? prediction.name : "인식 대기 중"}
-              </p>
-            </div>
-            <span className="text-sm font-extrabold text-sign-main">
-              {Math.round(prediction.confidence * 100)}%
-            </span>
-          </div>
-          <ProgressBar value={prediction.confidence} label="일치도" />
+          <p className="text-[10px] font-bold uppercase tracking-wider text-sign-sub">현재 해석</p>
+          <p className="text-lg font-extrabold text-sign-deep">
+            {prediction.accepted ? prediction.name : "인식 대기 중"}
+          </p>
         </div>
       </div>
 
