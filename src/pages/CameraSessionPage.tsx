@@ -137,19 +137,6 @@ export function CameraSessionPage({
         : currentQuizSign
           ? `“${currentQuizSign.name}”을 수어로 표현해보세요.`
           : "제시된 단어를 수어로 표현해보세요.";
-  const feedback =
-    mode === "translate"
-      ? prediction.accepted
-        ? "해석 결과를 확인했어요."
-        : "손이 잘 보이도록 카메라에 맞춰주세요."
-      : mode === "practice"
-        ? matchesTarget
-          ? "목표 수어와 일치해요."
-          : "손 모양을 천천히 다시 맞춰보세요."
-        : matchesTarget
-          ? "정답입니다!"
-          : "다시 시도해보세요.";
-
   const retry = () => {
     setQuizFeedback(null);
     setQuizHintVisible(false);
@@ -340,22 +327,6 @@ export function CameraSessionPage({
             : "카메라 시작"}
         </button>
       )}
-
-      <section
-        aria-live="polite"
-        className={`mt-4 flex items-center gap-3 rounded-3xl border p-4 ${
-          mode === "translate" || matchesTarget
-            ? "border-sign-border bg-sign-soft text-sign-deep"
-            : "border-amber-200 bg-sign-tip text-sign-tipText"
-        }`}
-      >
-        {mode === "translate" || matchesTarget ? (
-          <CheckCircle2 className="shrink-0 text-sign-success" size={23} aria-hidden="true" />
-        ) : (
-          <RotateCcw className="shrink-0" size={21} aria-hidden="true" />
-        )}
-        <p className="text-sm font-extrabold">{feedback}</p>
-      </section>
 
       <div className={`mt-4 grid gap-3 ${mode === "translate" ? "grid-cols-1" : "grid-cols-2"}`}>
         {mode === "translate" ? (
