@@ -33,11 +33,11 @@ export function QuizPage({ onStartQuiz }: QuizPageProps) {
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sign-soft text-sign-main">
           <Sparkles size={24} aria-hidden="true" />
         </span>
-        <h2 className="mt-5 text-xl font-extrabold text-sign-deep">기초 수어 5문제</h2>
+        <h2 className="mt-5 text-xl font-extrabold text-sign-deep">기초 수어 10문제</h2>
         <ul className="mt-4 space-y-3 text-sm text-sign-sub">
           <li className="flex items-center gap-3">
             <Clock3 className="text-sign-main" size={18} aria-hidden="true" />
-            예상 소요 시간 2분
+            예상 소요 시간 5분
           </li>
           <li className="flex items-center gap-3">
             <CheckCircle2 className="text-sign-main" size={18} aria-hidden="true" />

@@ -36,7 +36,9 @@ export function CameraSessionPage({
   const quizSigns = useMemo(() => {
     if (mode !== "quiz") return signs;
     const first = selectedSign ?? signs[0];
-    return first ? [first, ...signs.filter((sign) => sign.label !== first.label)] : [];
+    return first
+      ? [first, ...signs.filter((sign) => sign.label !== first.label)].slice(0, 10)
+      : [];
   }, [mode, selectedSign, signs]);
   const [quizIndex, setQuizIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -76,8 +78,10 @@ export function CameraSessionPage({
       !prediction.accepted ||
       quizFeedback
     ) return;
-    setQuizFeedback(matchesTarget ? "correct" : "incorrect");
-    setCameraActive(false);
+    if (matchesTarget) {
+      setQuizFeedback("correct");
+      setCameraActive(false);
+    }
   }, [
     cameraStatus,
     matchesTarget,
@@ -143,6 +147,12 @@ export function CameraSessionPage({
     setCameraActive(true);
     setCameraAttempt((current) => current + 1);
     setPrediction((current) => ({ ...current, confidence: 0, accepted: false }));
+  };
+
+  const giveUpQuestion = () => {
+    setQuizFeedback("incorrect");
+    setQuizHintVisible(false);
+    setCameraActive(false);
   };
 
   const nextQuestion = () => {
@@ -328,7 +338,7 @@ export function CameraSessionPage({
         </button>
       )}
 
-      <div className={`mt-4 grid gap-3 ${mode === "translate" ? "grid-cols-1" : "grid-cols-2"}`}>
+      <div className={`mt-4 grid gap-3 ${mode === "practice" ? "grid-cols-2" : "grid-cols-1"}`}>
         {mode === "translate" ? (
           <button
             type="button"
@@ -356,6 +366,14 @@ export function CameraSessionPage({
               <ChevronRight size={18} aria-hidden="true" />
             </button>
           </>
+        ) : mode === "quiz" ? (
+          <button
+            type="button"
+            onClick={giveUpQuestion}
+            className="min-h-[52px] rounded-2xl border border-gray-200 bg-white font-extrabold text-sign-sub transition hover:bg-gray-50 active:scale-[0.98]"
+          >
+            잘 모르겠어요
+          </button>
         ) : null}
       </div>
     </div>
