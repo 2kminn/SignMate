@@ -96,6 +96,7 @@ export function CameraPanel({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SignMateEngine | null>(null);
+  const onPredictionRef = useRef(onPrediction);
   const [status, setStatus] = useState<CameraStatus>("idle");
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const isFrontCamera = facingMode === "user";
@@ -103,6 +104,10 @@ export function CameraPanel({
   useEffect(() => {
     onStatusChange?.(status);
   }, [onStatusChange, status]);
+
+  useEffect(() => {
+    onPredictionRef.current = onPrediction;
+  }, [onPrediction]);
 
   useEffect(() => {
     void loadSignMateEngine().catch((error: unknown) => {
@@ -166,7 +171,7 @@ export function CameraPanel({
           mirrorCamera: isFrontCamera,
           mediaConstraints,
           onPrediction: (prediction) => {
-            if (!cancelled) onPrediction?.(prediction);
+            if (!cancelled) onPredictionRef.current?.(prediction);
           },
           onError: (error) => {
             console.error("MediaPipe inference failed", error);
@@ -193,7 +198,7 @@ export function CameraPanel({
       cancelled = true;
       stopEngine();
     };
-  }, [active, attempt, facingMode, isFrontCamera, onPrediction]);
+  }, [active, attempt, facingMode, isFrontCamera]);
 
   const hasError = status === "denied" || status === "unavailable" || status === "error";
 

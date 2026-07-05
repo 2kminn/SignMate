@@ -47,6 +47,9 @@ export function CameraSessionPage({
   const [guideExpanded, setGuideExpanded] = useState(false);
   const [quizFeedback, setQuizFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [quizHintVisible, setQuizHintVisible] = useState(false);
+  const [quizCountdown, setQuizCountdown] = useState<number | null>(null);
+  const [quizRecognitionPending, setQuizRecognitionPending] = useState(false);
+  const [quizRecognitionReady, setQuizRecognitionReady] = useState(false);
   const [prediction, setPrediction] = useState<SignPrediction>({
     label: "wait",
     name: "인식 대기 중",
@@ -66,10 +69,59 @@ export function CameraSessionPage({
     targetSign !== null && prediction.accepted && prediction.label === targetSign.label;
 
   useEffect(() => {
-    if (mode !== "quiz" || !prediction.accepted || quizFeedback) return;
+    if (
+      mode !== "quiz" ||
+      !quizRecognitionReady ||
+      cameraStatus !== "active" ||
+      !prediction.accepted ||
+      quizFeedback
+    ) return;
     setQuizFeedback(matchesTarget ? "correct" : "incorrect");
     setCameraActive(false);
-  }, [matchesTarget, mode, prediction.accepted, quizFeedback]);
+  }, [
+    cameraStatus,
+    matchesTarget,
+    mode,
+    prediction.accepted,
+    quizFeedback,
+    quizRecognitionReady
+  ]);
+
+  useEffect(() => {
+    if (mode !== "quiz" || cameraStatus !== "active") {
+      setQuizCountdown(null);
+      setQuizRecognitionPending(false);
+      setQuizRecognitionReady(false);
+      return;
+    }
+
+    let remaining = 3;
+    let recognitionTimer: number | null = null;
+    setQuizCountdown(remaining);
+    setQuizRecognitionPending(false);
+    setQuizRecognitionReady(false);
+    setPrediction((current) => ({ ...current, confidence: 0, accepted: false }));
+
+    const timer = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining === 0) {
+        window.clearInterval(timer);
+        setQuizCountdown(null);
+        setQuizRecognitionPending(true);
+        recognitionTimer = window.setTimeout(() => {
+          setQuizRecognitionPending(false);
+          setQuizRecognitionReady(true);
+        }, 1500);
+        return;
+      }
+      setQuizCountdown(remaining);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+      if (recognitionTimer !== null) window.clearTimeout(recognitionTimer);
+    };
+  }, [cameraAttempt, cameraStatus, mode, quizIndex]);
 
   const title =
     mode === "translate"
@@ -249,8 +301,25 @@ export function CameraSessionPage({
           active={cameraActive}
           attempt={cameraAttempt}
           onStatusChange={setCameraStatus}
-          onPrediction={setPrediction}
+          onPrediction={(nextPrediction) => {
+            if (mode !== "quiz" || quizRecognitionReady) {
+              setPrediction(nextPrediction);
+            }
+          }}
         />
+        {mode === "quiz" && quizCountdown !== null && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/35 backdrop-blur-[2px]">
+            <div className="text-center text-white">
+              <p className="text-7xl font-black drop-shadow-lg">{quizCountdown}</p>
+              <p className="mt-3 text-sm font-extrabold">손을 준비해주세요</p>
+            </div>
+          </div>
+        )}
+        {mode === "quiz" && quizRecognitionPending && (
+          <div className="absolute inset-x-4 top-1/2 z-20 -translate-y-1/2 rounded-2xl bg-slate-950/70 px-4 py-4 text-center text-sm font-extrabold text-white shadow-lg backdrop-blur">
+            손동작 인식 중...
+          </div>
+        )}
         <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-sign-light/80 bg-white/90 p-3.5 shadow-lg backdrop-blur">
           <p className="text-[10px] font-bold uppercase tracking-wider text-sign-sub">현재 해석</p>
           <p className="text-lg font-extrabold text-sign-deep">
@@ -393,6 +462,16 @@ export function CameraSessionPage({
                 </button>
               )}
             </div>
+            {quizFeedback === "incorrect" && (
+              <button
+                type="button"
+                onClick={nextQuestion}
+                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-1 rounded-2xl border border-gray-200 bg-white px-3 font-extrabold text-sign-sub transition hover:bg-gray-50 active:scale-[0.98]"
+              >
+                {quizIndex >= quizSigns.length - 1 ? "결과 보기" : "다른 문제로 넘어가기"}
+                <ChevronRight size={18} aria-hidden="true" />
+              </button>
+            )}
           </section>
         </div>,
         document.body
