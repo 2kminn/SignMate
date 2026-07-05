@@ -1,10 +1,9 @@
-import { Camera, ChevronRight, Hand } from "lucide-react";
+import { ChevronRight, Hand } from "lucide-react";
 import type { SignCategory, SignInfo } from "../types/sign";
 
 interface SignCardProps {
   sign: SignInfo;
   onClick: () => void;
-  onPractice: () => void;
 }
 
 const difficultyLabel = {
@@ -20,7 +19,7 @@ const categoryLabel: Record<SignCategory, string> = {
   daily: "생활"
 };
 
-export function SignCard({ sign, onClick, onPractice }: SignCardProps) {
+export function SignCard({ sign, onClick }: SignCardProps) {
   return (
     <article className="rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,.04)] transition hover:border-sign-border">
       <button
@@ -45,14 +44,6 @@ export function SignCard({ sign, onClick, onPractice }: SignCardProps) {
           </span>
         </span>
         <ChevronRight className="shrink-0 text-gray-300" size={21} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={onPractice}
-        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-sign-soft text-sm font-extrabold text-sign-dark transition hover:bg-sign-light"
-      >
-        <Camera size={17} aria-hidden="true" />
-        따라 하기
       </button>
     </article>
   );

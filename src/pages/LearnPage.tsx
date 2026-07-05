@@ -113,7 +113,6 @@ export function LearnPage({ onPractice }: LearnPageProps) {
                 key={sign.label}
                 sign={sign}
                 onClick={() => setSelectedSign(sign)}
-                onPractice={() => handlePractice(sign)}
               />
             ))}
           </div>

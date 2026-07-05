@@ -1,4 +1,5 @@
 import { Camera, Check, Hand, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import type { SignInfo } from "../types/sign";
 
 interface SignDetailModalProps {
@@ -8,9 +9,9 @@ interface SignDetailModalProps {
 }
 
 export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalProps) {
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -20,7 +21,7 @@ export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalPr
         role="dialog"
         aria-modal="true"
         aria-labelledby="sign-detail-title"
-        className="max-h-[90vh] w-full max-w-[430px] overflow-y-auto rounded-t-[28px] bg-white px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-[430px] overflow-y-auto rounded-[28px] bg-white px-5 pb-6 pt-3 shadow-2xl"
       >
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-300" />
         <div className="flex items-center justify-between">
@@ -35,10 +36,6 @@ export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalPr
           >
             <X size={22} aria-hidden="true" />
           </button>
-        </div>
-        <div className="mt-4 grid grid-cols-2 rounded-2xl bg-gray-100 p-1 text-sm font-bold">
-          <div className="rounded-xl bg-white py-2.5 text-center text-sign-main shadow-sm">설명</div>
-          <div className="py-2.5 text-center text-sign-sub">따라하기</div>
         </div>
         <div
           role="img"
@@ -80,6 +77,7 @@ export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalPr
           카메라로 따라 하기
         </button>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
