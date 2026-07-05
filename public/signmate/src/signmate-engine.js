@@ -9,6 +9,45 @@ const HAND_ORDER = ["Left", "Right"];
 const DEFAULT_HAND_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 const DEFAULT_WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+let sharedRuntimePromise = null;
+
+async function loadModel(modelUrl) {
+  const response = await fetch(modelUrl, { cache: "force-cache" });
+  if (!response.ok) {
+    throw new Error(`SignMate model load failed: HTTP ${response.status}`);
+  }
+
+  const model = await response.json();
+  if (model.feature_size !== FEATURE_SIZE) {
+    throw new Error(`Invalid feature_size: ${model.feature_size}`);
+  }
+  return model;
+}
+
+function getSharedRuntime(modelUrl) {
+  if (!sharedRuntimePromise) {
+    sharedRuntimePromise = Promise.all([
+      FilesetResolver.forVisionTasks(DEFAULT_WASM_URL),
+      loadModel(modelUrl),
+    ])
+      .then(async ([vision, model]) => ({
+        model,
+        handLandmarker: await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: DEFAULT_HAND_MODEL_URL,
+            delegate: "GPU",
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+        }),
+      }))
+      .catch((error) => {
+        sharedRuntimePromise = null;
+        throw error;
+      });
+  }
+  return sharedRuntimePromise;
+}
 
 export async function createSignMate(options) {
   const engine = new SignMateEngine(options);
@@ -16,7 +55,11 @@ export async function createSignMate(options) {
   return engine;
 }
 
-globalThis.SignMateMediaPipe = { createSignMate };
+export async function preloadSignMateRuntime(modelUrl) {
+  await getSharedRuntime(modelUrl);
+}
+
+globalThis.SignMateMediaPipe = { createSignMate, preloadSignMateRuntime };
 
 class SignMateEngine {
   constructor({
@@ -63,35 +106,11 @@ class SignMateEngine {
   }
 
   async load() {
-    const [vision, model] = await Promise.all([
-      FilesetResolver.forVisionTasks(DEFAULT_WASM_URL),
-      this.loadModel(),
-    ]);
+    const { model, handLandmarker } = await getSharedRuntime(this.modelUrl);
 
     this.model = model;
-    this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: DEFAULT_HAND_MODEL_URL,
-        delegate: "GPU",
-      },
-      runningMode: "VIDEO",
-      numHands: 2,
-    });
-
+    this.handLandmarker = handLandmarker;
     if (this.ctx) this.drawingUtils = new DrawingUtils(this.ctx);
-  }
-
-  async loadModel() {
-    const response = await fetch(this.modelUrl, { cache: "force-cache" });
-    if (!response.ok) {
-      throw new Error(`SignMate model load failed: HTTP ${response.status}`);
-    }
-
-    const model = await response.json();
-    if (model.feature_size !== FEATURE_SIZE) {
-      throw new Error(`Invalid feature_size: ${model.feature_size}`);
-    }
-    return model;
   }
 
   async start() {
@@ -124,10 +143,9 @@ class SignMateEngine {
 
   dispose() {
     this.stop();
-    if (this.handLandmarker) {
-      this.handLandmarker.close();
-      this.handLandmarker = null;
-    }
+    this.handLandmarker = null;
+    this.model = null;
+    this.drawingUtils = null;
   }
 
   loop = () => {

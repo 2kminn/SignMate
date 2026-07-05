@@ -46,6 +46,7 @@ type CreateSignMate = (options: {
 
 interface SignMateMediaPipeGlobal {
   createSignMate: CreateSignMate;
+  preloadSignMateRuntime: (modelUrl: string) => Promise<void>;
 }
 
 let engineLoaderPromise: Promise<SignMateMediaPipeGlobal> | null = null;
@@ -84,7 +85,9 @@ export function preloadSignMateAssets() {
   if (assetsPreloadPromise) return assetsPreloadPromise;
   const modelUrl = `${import.meta.env.BASE_URL}signmate/assets/signmate_model.json`;
   assetsPreloadPromise = Promise.allSettled([
-    loadSignMateEngine(),
+    loadSignMateEngine().then(({ preloadSignMateRuntime }) =>
+      preloadSignMateRuntime(modelUrl)
+    ),
     fetch(modelUrl, { cache: "force-cache" }),
     fetch(HAND_MODEL_URL, { cache: "force-cache", mode: "cors" })
   ]).then(() => undefined);
