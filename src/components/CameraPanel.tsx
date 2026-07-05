@@ -105,11 +105,21 @@ export function CameraPanel({
   }, [onStatusChange, status]);
 
   useEffect(() => {
+    void loadSignMateEngine().catch((error: unknown) => {
+      console.error("MediaPipe 엔진 사전 로드 실패", error);
+    });
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
+    let pendingStream: MediaStream | null = null;
 
     const stopEngine = () => {
       engineRef.current?.dispose();
       engineRef.current = null;
+      pendingStream?.getTracks().forEach((track) => track.stop());
+      pendingStream = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
     };
 
     if (!active) {
@@ -128,6 +138,24 @@ export function CameraPanel({
     const startEngine = async () => {
       try {
         if (!videoRef.current || !canvasRef.current) return;
+        const mediaConstraints: MediaStreamConstraints = {
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 960 }
+          },
+          audio: false
+        };
+
+        pendingStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+        if (cancelled) {
+          stopEngine();
+          return;
+        }
+        videoRef.current.srcObject = pendingStream;
+        await videoRef.current.play();
+        if (!cancelled) setStatus("active");
+
         const { createSignMate } = await loadSignMateEngine();
         const engine = await createSignMate({
           videoElement: videoRef.current,
@@ -136,14 +164,7 @@ export function CameraPanel({
           threshold: 0.7,
           smoothingWindow: 12,
           mirrorCamera: isFrontCamera,
-          mediaConstraints: {
-            video: {
-              facingMode: { ideal: facingMode },
-              width: { ideal: 1280 },
-              height: { ideal: 960 }
-            },
-            audio: false
-          },
+          mediaConstraints,
           onPrediction: (prediction) => {
             if (!cancelled) onPrediction?.(prediction);
           },
@@ -160,8 +181,8 @@ export function CameraPanel({
 
         engineRef.current = engine;
         await engine.start();
-        if (!cancelled) setStatus("active");
       } catch (error: unknown) {
+        stopEngine();
         if (!cancelled) setStatus(getErrorState(error));
       }
     };

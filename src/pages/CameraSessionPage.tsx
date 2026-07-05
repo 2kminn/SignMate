@@ -3,10 +3,13 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  CircleX,
+  Lightbulb,
   RotateCcw,
   X
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CameraPanel,
   type CameraStatus,
@@ -42,6 +45,8 @@ export function CameraSessionPage({
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("idle");
   const [cameraAttempt, setCameraAttempt] = useState(0);
   const [guideExpanded, setGuideExpanded] = useState(false);
+  const [quizFeedback, setQuizFeedback] = useState<"correct" | "incorrect" | null>(null);
+  const [quizHintVisible, setQuizHintVisible] = useState(false);
   const [prediction, setPrediction] = useState<SignPrediction>({
     label: "wait",
     name: "인식 대기 중",
@@ -59,6 +64,12 @@ export function CameraSessionPage({
   const targetSign = mode === "quiz" ? currentQuizSign : selectedSign;
   const matchesTarget =
     targetSign !== null && prediction.accepted && prediction.label === targetSign.label;
+
+  useEffect(() => {
+    if (mode !== "quiz" || !prediction.accepted || quizFeedback) return;
+    setQuizFeedback(matchesTarget ? "correct" : "incorrect");
+    setCameraActive(false);
+  }, [matchesTarget, mode, prediction.accepted, quizFeedback]);
 
   const title =
     mode === "translate"
@@ -88,14 +99,18 @@ export function CameraSessionPage({
           : "다시 시도해보세요.";
 
   const retry = () => {
+    setQuizFeedback(null);
+    setQuizHintVisible(false);
     setCameraActive(true);
     setCameraAttempt((current) => current + 1);
     setPrediction((current) => ({ ...current, confidence: 0, accepted: false }));
   };
 
   const nextQuestion = () => {
-    const nextScore = score + (matchesTarget ? 1 : 0);
+    const nextScore = score + (quizFeedback === "correct" ? 1 : 0);
     setScore(nextScore);
+    setQuizFeedback(null);
+    setQuizHintVisible(false);
     if (quizIndex >= quizSigns.length - 1) {
       saveQuizResult(Math.round((nextScore / quizSigns.length) * 100), true);
       setQuizComplete(true);
@@ -110,6 +125,8 @@ export function CameraSessionPage({
     setQuizIndex(0);
     setScore(0);
     setQuizComplete(false);
+    setQuizFeedback(null);
+    setQuizHintVisible(false);
     retry();
   };
 
@@ -157,6 +174,7 @@ export function CameraSessionPage({
   }
 
   return (
+    <>
     <div className="min-h-screen bg-sign-app px-5 pb-8 pt-[max(1rem,env(safe-area-inset-top))]">
       <header className="mb-5 flex items-center gap-3">
         <button
@@ -277,7 +295,7 @@ export function CameraSessionPage({
           >
             종료하기
           </button>
-        ) : (
+        ) : mode === "practice" ? (
           <>
             <button
               type="button"
@@ -285,19 +303,100 @@ export function CameraSessionPage({
               className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-sign-light px-3 font-extrabold text-sign-deep transition hover:bg-sign-border active:scale-[0.98]"
             >
               <RotateCcw size={18} aria-hidden="true" />
-              {mode === "quiz" ? "다시 시도" : "다시 하기"}
+              다시 하기
             </button>
             <button
               type="button"
-              onClick={mode === "quiz" ? nextQuestion : onGoLearn}
+              onClick={onGoLearn}
               className="flex min-h-[52px] items-center justify-center gap-1 rounded-2xl bg-sign-main px-3 font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98]"
             >
-              {mode === "quiz" ? "다음 문제" : "다른 수어 배우기"}
+              다른 수어 배우기
               <ChevronRight size={18} aria-hidden="true" />
             </button>
           </>
-        )}
+        ) : null}
       </div>
     </div>
+    {quizFeedback && currentQuizSign &&
+      createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-5 backdrop-blur-sm">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quiz-feedback-title"
+            className="max-h-[calc(100dvh-2.5rem)] w-full max-w-sm overflow-y-auto rounded-[28px] bg-white p-6 text-center shadow-2xl"
+          >
+            <span
+              className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
+                quizFeedback === "correct"
+                  ? "bg-sign-light text-sign-success"
+                  : "bg-red-50 text-sign-error"
+              }`}
+            >
+              {quizFeedback === "correct" ? (
+                <CheckCircle2 size={36} aria-hidden="true" />
+              ) : (
+                <CircleX size={36} aria-hidden="true" />
+              )}
+            </span>
+            <h2 id="quiz-feedback-title" className="mt-4 text-2xl font-black text-sign-deep">
+              {quizFeedback === "correct" ? "정답이에요!" : "아쉬워요, 다시 해볼까요?"}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-sign-sub">
+              {quizFeedback === "correct"
+                ? `“${currentQuizSign.name}” 동작을 정확히 표현했어요.`
+                : `목표 수어는 “${currentQuizSign.name}”입니다.`}
+            </p>
+
+            {quizFeedback === "incorrect" && quizHintVisible && (
+              <div className="mt-5 rounded-2xl border border-sign-light bg-sign-soft p-3 text-left">
+                <div className="flex h-48 items-center justify-center overflow-hidden rounded-xl bg-white">
+                  <img
+                    src={`${import.meta.env.BASE_URL}sign-images/${currentQuizSign.label}.png`}
+                    alt={`${currentQuizSign.name} 수어 동작 힌트`}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <p className="mt-3 text-sm leading-6 text-sign-sub">
+                  {currentQuizSign.description}
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={retry}
+                className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-sign-light px-3 font-extrabold text-sign-deep transition hover:bg-sign-border active:scale-[0.98]"
+              >
+                <RotateCcw size={18} aria-hidden="true" />
+                다시 하기
+              </button>
+              {quizFeedback === "correct" ? (
+                <button
+                  type="button"
+                  onClick={nextQuestion}
+                  className="flex min-h-[52px] items-center justify-center gap-1 rounded-2xl bg-sign-main px-3 font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98]"
+                >
+                  다음 퀴즈
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setQuizHintVisible((current) => !current)}
+                  aria-expanded={quizHintVisible}
+                  className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-amber-100 px-3 font-extrabold text-amber-800 transition hover:bg-amber-200 active:scale-[0.98]"
+                >
+                  <Lightbulb size={18} aria-hidden="true" />
+                  {quizHintVisible ? "힌트 닫기" : "힌트 보기"}
+                </button>
+              )}
+            </div>
+          </section>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

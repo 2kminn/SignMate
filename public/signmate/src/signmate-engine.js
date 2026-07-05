@@ -97,9 +97,14 @@ class SignMateEngine {
   async start() {
     if (!this.handLandmarker || !this.model) await this.load();
 
-    this.stream = await navigator.mediaDevices.getUserMedia(this.mediaConstraints);
-    this.video.srcObject = this.stream;
-    await this.video.play();
+    const existingStream =
+      this.video.srcObject instanceof MediaStream ? this.video.srcObject : null;
+    this.stream =
+      existingStream ?? await navigator.mediaDevices.getUserMedia(this.mediaConstraints);
+    if (!existingStream) {
+      this.video.srcObject = this.stream;
+      await this.video.play();
+    }
     this.loop();
   }
 
