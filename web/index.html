@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignMate Web MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>SignMate</h1>
+          <p>한국 수어 인식 MVP</p>
+        </div>
+        <div class="actions">
+          <button id="startButton" type="button">카메라 시작</button>
+          <button id="resetButton" type="button">초기화</button>
+        </div>
+      </header>
+
+      <section class="workspace" aria-label="SignMate webcam workspace">
+        <div class="stage">
+          <video id="video" playsinline autoplay muted></video>
+          <canvas id="overlay"></canvas>
+        </div>
+
+        <aside class="status-panel" aria-label="prediction status">
+          <div class="metric">
+            <span>현재 예측</span>
+            <strong id="word">대기</strong>
+          </div>
+          <div class="metric">
+            <span>confidence</span>
+            <strong id="confidence">0.00</strong>
+          </div>
+          <div class="metric">
+            <span>감지된 손</span>
+            <strong id="hands">0</strong>
+          </div>
+          <div class="metric">
+            <span>raw label</span>
+            <strong id="rawLabel">web-placeholder</strong>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
