@@ -2,6 +2,19 @@ import { Camera, Check, Hand, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import type { SignInfo } from "../types/sign";
 
+const signImageLabels = new Set([
+  "hello",
+  "thanks",
+  "sorry",
+  "okay",
+  "help",
+  "no",
+  "water",
+  "restroom",
+  "home",
+  "name"
+]);
+
 interface SignDetailModalProps {
   sign: SignInfo;
   onClose: () => void;
@@ -9,6 +22,8 @@ interface SignDetailModalProps {
 }
 
 export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalProps) {
+  const hasSignImage = signImageLabels.has(sign.label);
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
@@ -37,13 +52,23 @@ export function SignDetailModal({ sign, onClose, onPractice }: SignDetailModalPr
             <X size={22} aria-hidden="true" />
           </button>
         </div>
-        <div
-          role="img"
-          aria-label={`${sign.name} 수어 일러스트 자리`}
-          className="my-5 flex aspect-[2/1] items-center justify-center rounded-[20px] bg-gradient-to-br from-sign-soft to-sign-light text-sign-main"
-        >
-          <Hand size={58} strokeWidth={1.5} aria-hidden="true" />
-        </div>
+        {hasSignImage ? (
+          <div className="my-5 flex h-64 items-center justify-center overflow-hidden rounded-[20px] bg-white">
+            <img
+              src={`${import.meta.env.BASE_URL}sign-images/${sign.label}.png`}
+              alt={`${sign.name} 수어 동작 설명`}
+              className="h-full w-full object-contain"
+            />
+          </div>
+        ) : (
+          <div
+            role="img"
+            aria-label={`${sign.name} 수어 일러스트 자리`}
+            className="my-5 flex aspect-[2/1] items-center justify-center rounded-[20px] bg-gradient-to-br from-sign-soft to-sign-light text-sign-main"
+          >
+            <Hand size={58} strokeWidth={1.5} aria-hidden="true" />
+          </div>
+        )}
         <p className="leading-7 text-sign-text">{sign.description}</p>
         <div className="mt-5">
           <h3 className="font-extrabold text-sign-deep">사용 예시</h3>

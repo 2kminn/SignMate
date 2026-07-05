@@ -1,4 +1,16 @@
-export type SignLabel = "yes" | "no" | "thanks" | "help" | "water" | "unknown";
+export type SignLabel =
+  | "idle"
+  | "hello"
+  | "thanks"
+  | "sorry"
+  | "okay"
+  | "help"
+  | "no"
+  | "water"
+  | "restroom"
+  | "home"
+  | "name"
+  | "unknown";
 export type SignCategory = "greeting" | "response" | "request" | "daily";
 
 export interface SignInfo {
