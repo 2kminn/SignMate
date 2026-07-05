@@ -1,7 +1,14 @@
 import { AlertCircle, Camera, CameraOff, LoaderCircle, SwitchCamera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export type CameraStatus = "idle" | "requesting" | "active" | "denied" | "unavailable" | "error";
+export type CameraStatus =
+  | "idle"
+  | "requesting"
+  | "initializing"
+  | "active"
+  | "denied"
+  | "unavailable"
+  | "error";
 
 export interface SignPrediction {
   label: string;
@@ -42,6 +49,9 @@ interface SignMateMediaPipeGlobal {
 }
 
 let engineLoaderPromise: Promise<SignMateMediaPipeGlobal> | null = null;
+let assetsPreloadPromise: Promise<void> | null = null;
+const HAND_MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
 const loadSignMateEngine = () => {
   const browserWindow = window as typeof window & {
@@ -70,9 +80,21 @@ const loadSignMateEngine = () => {
   return engineLoaderPromise;
 };
 
+export function preloadSignMateAssets() {
+  if (assetsPreloadPromise) return assetsPreloadPromise;
+  const modelUrl = `${import.meta.env.BASE_URL}signmate/assets/signmate_model.json`;
+  assetsPreloadPromise = Promise.allSettled([
+    loadSignMateEngine(),
+    fetch(modelUrl, { cache: "force-cache" }),
+    fetch(HAND_MODEL_URL, { cache: "force-cache", mode: "cors" })
+  ]).then(() => undefined);
+  return assetsPreloadPromise;
+}
+
 const statusText: Record<CameraStatus, string> = {
   idle: "카메라 실행 대기",
   requesting: "카메라 권한 확인 중",
+  initializing: "인식 모델 준비 중",
   active: "카메라 실행 중",
   denied: "카메라 권한 필요",
   unavailable: "카메라 사용 불가",
@@ -110,7 +132,7 @@ export function CameraPanel({
   }, [onPrediction]);
 
   useEffect(() => {
-    void loadSignMateEngine().catch((error: unknown) => {
+    void preloadSignMateAssets().catch((error: unknown) => {
       console.error("MediaPipe 엔진 사전 로드 실패", error);
     });
   }, []);
@@ -159,7 +181,7 @@ export function CameraPanel({
         }
         videoRef.current.srcObject = pendingStream;
         await videoRef.current.play();
-        if (!cancelled) setStatus("active");
+        if (!cancelled) setStatus("initializing");
 
         const { createSignMate } = await loadSignMateEngine();
         const engine = await createSignMate({
@@ -186,6 +208,7 @@ export function CameraPanel({
 
         engineRef.current = engine;
         await engine.start();
+        if (!cancelled) setStatus("active");
       } catch (error: unknown) {
         stopEngine();
         if (!cancelled) setStatus(getErrorState(error));
@@ -214,7 +237,7 @@ export function CameraPanel({
         className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
           isFrontCamera ? "scale-x-[-1]" : ""
         } ${
-          status === "active" ? "opacity-100" : "opacity-0"
+          status === "active" || status === "initializing" ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
         muted
@@ -232,7 +255,7 @@ export function CameraPanel({
 
       {status !== "active" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center text-white/85">
-          {status === "requesting" ? (
+          {status === "requesting" || status === "initializing" ? (
             <LoaderCircle className="animate-spin" size={compact ? 34 : 44} aria-hidden="true" />
           ) : hasError ? (
             <CameraOff size={compact ? 34 : 44} strokeWidth={1.6} aria-hidden="true" />
@@ -248,6 +271,8 @@ export function CameraPanel({
                   ? "다른 앱이 카메라를 사용 중인지 확인해주세요."
                   : status === "requesting"
                     ? "카메라 사용 권한을 확인하고 있어요."
+                    : status === "initializing"
+                      ? "수어 인식 모델을 준비하고 있어요."
                     : "버튼을 눌러 카메라를 시작하세요."}
           </p>
           {hasError && (
@@ -266,7 +291,7 @@ export function CameraPanel({
               ? "bg-sign-success"
               : hasError
                 ? "bg-sign-error"
-                : status === "requesting"
+                : status === "requesting" || status === "initializing"
                   ? "animate-pulse bg-amber-400"
                   : "bg-gray-400"
           }`}
@@ -279,7 +304,7 @@ export function CameraPanel({
         onClick={() =>
           setFacingMode((current) => (current === "user" ? "environment" : "user"))
         }
-        disabled={status === "requesting"}
+        disabled={status === "requesting" || status === "initializing"}
         aria-label={isFrontCamera ? "후면 카메라로 전환" : "전면 카메라로 전환"}
         title={isFrontCamera ? "후면 카메라로 전환" : "전면 카메라로 전환"}
         className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-sign-deep shadow backdrop-blur transition hover:bg-white active:scale-95 disabled:pointer-events-none disabled:opacity-50"

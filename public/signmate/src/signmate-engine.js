@@ -82,7 +82,7 @@ class SignMateEngine {
   }
 
   async loadModel() {
-    const response = await fetch(this.modelUrl, { cache: "no-store" });
+    const response = await fetch(this.modelUrl, { cache: "force-cache" });
     if (!response.ok) {
       throw new Error(`SignMate model load failed: HTTP ${response.status}`);
     }

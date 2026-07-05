@@ -332,10 +332,12 @@ export function CameraSessionPage({
         <button
           type="button"
           onClick={retry}
-          disabled={cameraStatus === "requesting"}
+          disabled={cameraStatus === "requesting" || cameraStatus === "initializing"}
           className="mt-4 min-h-[52px] w-full rounded-2xl bg-sign-main font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
         >
-          {cameraStatus === "requesting" ? "카메라 준비 중..." : "카메라 시작"}
+          {cameraStatus === "requesting" || cameraStatus === "initializing"
+            ? "카메라 준비 중..."
+            : "카메라 시작"}
         </button>
       )}
 
@@ -393,8 +395,19 @@ export function CameraSessionPage({
             role="dialog"
             aria-modal="true"
             aria-labelledby="quiz-feedback-title"
-            className="max-h-[calc(100dvh-2.5rem)] w-full max-w-sm overflow-y-auto rounded-[28px] bg-white p-6 text-center shadow-2xl"
+            className="relative max-h-[calc(100dvh-2.5rem)] w-full max-w-sm overflow-y-auto rounded-[28px] bg-white p-6 text-center shadow-2xl"
           >
+            <button
+              type="button"
+              onClick={() => {
+                setQuizFeedback(null);
+                setQuizHintVisible(false);
+              }}
+              aria-label="퀴즈 피드백 닫기"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sign-sub transition hover:bg-gray-200 active:scale-95"
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
             <span
               className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
                 quizFeedback === "correct"

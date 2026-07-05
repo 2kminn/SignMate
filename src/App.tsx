@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppHeader } from "./components/AppHeader";
 import { BottomNav } from "./components/BottomNav";
+import { preloadSignMateAssets } from "./components/CameraPanel";
 import { signs } from "./data/signs";
 import { CameraSessionPage } from "./pages/CameraSessionPage";
 import { LearnPage } from "./pages/LearnPage";
@@ -16,6 +17,10 @@ export default function App() {
   );
   const [sessionMode, setSessionMode] = useState<SessionMode>("translate");
   const [selectedSign, setSelectedSign] = useState<SignInfo | null>(null);
+
+  useEffect(() => {
+    void preloadSignMateAssets();
+  }, []);
 
   const startCameraSession = (mode: SessionMode, sign: SignInfo | null = null) => {
     setSessionMode(mode);
