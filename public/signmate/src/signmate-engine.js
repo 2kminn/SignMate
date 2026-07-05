@@ -16,6 +16,8 @@ export async function createSignMate(options) {
   return engine;
 }
 
+globalThis.SignMateMediaPipe = { createSignMate };
+
 class SignMateEngine {
   constructor({
     videoElement,

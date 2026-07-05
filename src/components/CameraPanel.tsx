@@ -35,6 +35,39 @@ type CreateSignMate = (options: {
   onError: (error: unknown) => void;
 }) => Promise<SignMateEngine>;
 
+interface SignMateMediaPipeGlobal {
+  createSignMate: CreateSignMate;
+}
+
+let engineLoaderPromise: Promise<SignMateMediaPipeGlobal> | null = null;
+
+const loadSignMateEngine = () => {
+  const browserWindow = window as typeof window & {
+    SignMateMediaPipe?: SignMateMediaPipeGlobal;
+  };
+  if (browserWindow.SignMateMediaPipe) {
+    return Promise.resolve(browserWindow.SignMateMediaPipe);
+  }
+  if (engineLoaderPromise) return engineLoaderPromise;
+
+  engineLoaderPromise = new Promise<SignMateMediaPipeGlobal>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = `${import.meta.env.BASE_URL}signmate/src/signmate-engine.js`;
+    script.onload = () => {
+      if (browserWindow.SignMateMediaPipe) {
+        resolve(browserWindow.SignMateMediaPipe);
+      } else {
+        reject(new Error("SignMate MediaPipe API를 찾을 수 없습니다."));
+      }
+    };
+    script.onerror = () => reject(new Error("SignMate MediaPipe 엔진을 불러오지 못했습니다."));
+    document.head.appendChild(script);
+  });
+
+  return engineLoaderPromise;
+};
+
 const statusText: Record<CameraStatus, string> = {
   idle: "카메라 실행 대기",
   requesting: "카메라 권한 확인 중",
@@ -91,14 +124,11 @@ export function CameraPanel({
     const startEngine = async () => {
       try {
         if (!videoRef.current || !canvasRef.current) return;
-        const engineUrl = "/signmate/src/signmate-engine.js";
-        const { createSignMate } = (await import(/* @vite-ignore */ engineUrl)) as {
-          createSignMate: CreateSignMate;
-        };
+        const { createSignMate } = await loadSignMateEngine();
         const engine = await createSignMate({
           videoElement: videoRef.current,
           canvasElement: canvasRef.current,
-          modelUrl: "/signmate/assets/signmate_model.json",
+          modelUrl: `${import.meta.env.BASE_URL}signmate/assets/signmate_model.json`,
           threshold: 0.7,
           smoothingWindow: 12,
           onPrediction: (prediction) => {
