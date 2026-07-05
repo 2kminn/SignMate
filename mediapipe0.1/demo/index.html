@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignMate Frontend Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>SignMate Demo</h1>
+          <p>MediaPipe + browser MLP inference</p>
+        </div>
+        <div class="actions">
+          <button id="startButton" type="button">카메라 시작</button>
+          <button id="stopButton" type="button" disabled>정지</button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="stage">
+          <video id="video" playsinline autoplay muted></video>
+          <canvas id="overlay"></canvas>
+        </div>
+
+        <aside class="status-panel">
+          <div class="metric">
+            <span>현재 예측</span>
+            <strong id="word">대기</strong>
+          </div>
+          <div class="metric">
+            <span>confidence</span>
+            <strong id="confidence">0.00</strong>
+          </div>
+          <div class="metric">
+            <span>감지된 손</span>
+            <strong id="hands">0</strong>
+          </div>
+          <div class="metric">
+            <span>raw label</span>
+            <strong id="rawLabel">ready</strong>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

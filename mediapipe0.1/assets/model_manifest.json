@@ -1,0 +1,10 @@
+{
+  "exported_at": "2026-07-05T10:41:38",
+  "labels": true,
+  "label_encoder": true,
+  "keras_model_found": true,
+  "lightweight_model_exported": true,
+  "lightweight_model_path": "assets/signmate_model.json",
+  "tfjs_model_exported": false,
+  "tfjs_model_path": null
+}
