@@ -119,7 +119,7 @@ export function CameraSessionPage({
           type="button"
           onClick={onEnd}
           aria-label="퀴즈 종료"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-sign-deep shadow-sm"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-sign-deep shadow-sm transition hover:bg-sign-soft active:scale-95"
         >
           <X size={22} aria-hidden="true" />
         </button>
@@ -137,7 +137,7 @@ export function CameraSessionPage({
             <button
               type="button"
               onClick={restartQuiz}
-              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-sign-main font-extrabold text-white hover:bg-sign-dark"
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-sign-main font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98]"
             >
               <RotateCcw size={19} aria-hidden="true" />
               다시 풀기
@@ -145,7 +145,7 @@ export function CameraSessionPage({
             <button
               type="button"
               onClick={onGoLearn}
-              className="min-h-[52px] w-full rounded-2xl bg-sign-light font-extrabold text-sign-deep hover:bg-sign-border"
+              className="min-h-[52px] w-full rounded-2xl bg-sign-light font-extrabold text-sign-deep transition hover:bg-sign-border active:scale-[0.98]"
             >
               학습 탭으로 돌아가기
             </button>
@@ -223,7 +223,7 @@ export function CameraSessionPage({
           type="button"
           onClick={retry}
           disabled={cameraStatus === "requesting"}
-          className="mt-4 min-h-[52px] w-full rounded-2xl bg-sign-main font-extrabold text-white disabled:opacity-60"
+          className="mt-4 min-h-[52px] w-full rounded-2xl bg-sign-main font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
         >
           {cameraStatus === "requesting" ? "카메라 준비 중..." : "카메라 시작"}
         </button>
@@ -250,7 +250,7 @@ export function CameraSessionPage({
           <button
             type="button"
             onClick={onEnd}
-            className="min-h-[52px] rounded-2xl bg-sign-deep font-extrabold text-white"
+            className="min-h-[52px] rounded-2xl border border-red-200 bg-white font-extrabold text-red-600 transition hover:border-red-300 hover:bg-red-50 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
           >
             종료하기
           </button>
@@ -259,7 +259,7 @@ export function CameraSessionPage({
             <button
               type="button"
               onClick={retry}
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-sign-light px-3 font-extrabold text-sign-deep"
+              className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-sign-light px-3 font-extrabold text-sign-deep transition hover:bg-sign-border active:scale-[0.98]"
             >
               <RotateCcw size={18} aria-hidden="true" />
               {mode === "quiz" ? "다시 시도" : "다시 하기"}
@@ -267,7 +267,7 @@ export function CameraSessionPage({
             <button
               type="button"
               onClick={mode === "quiz" ? nextQuestion : onGoLearn}
-              className="flex min-h-[52px] items-center justify-center gap-1 rounded-2xl bg-sign-main px-3 font-extrabold text-white"
+              className="flex min-h-[52px] items-center justify-center gap-1 rounded-2xl bg-sign-main px-3 font-extrabold text-white transition hover:bg-sign-dark active:scale-[0.98]"
             >
               {mode === "quiz" ? "다음 문제" : "다른 수어 배우기"}
               <ChevronRight size={18} aria-hidden="true" />
