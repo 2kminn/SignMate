@@ -13,7 +13,7 @@ export function AppHeader({ onShowOnboarding }: AppHeaderProps) {
             <Hand size={27} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-3xl font-extrabold tracking-[-0.04em] text-sign-deep">SignMate</p>
+            <p className="text-3xl font-bold tracking-[-0.04em] text-sign-deep">SignMate</p>
             <p className="text-sm font-medium text-gray-500">매일 가볍게 배우는 수어</p>
           </div>
         </div>

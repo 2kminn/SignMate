@@ -16,7 +16,7 @@ export function TranslatePage({ onStart }: TranslatePageProps) {
           바로 확인해보세요
         </h1>
         <p className="mt-4 text-sm leading-6 text-sign-sub">
-          네, 아니요, 감사합니다, 도와주세요, 물 표현을 실시간으로 해석합니다.
+          수어를 실시간으로 해석합니다.
         </p>
       </div>
 

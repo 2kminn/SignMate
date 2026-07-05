@@ -89,7 +89,7 @@ export function CameraPanel({ compact = false, active, attempt = 0, onStatusChan
     <section
       aria-label="카메라 미리보기"
       className={`relative isolate overflow-hidden rounded-[28px] bg-gradient-to-br from-gray-800 to-gray-950 shadow-[0_16px_40px_rgba(15,23,42,.15)] ${
-        compact ? "aspect-[4/3]" : "aspect-square"
+        compact ? "aspect-[8/9]" : "aspect-square"
       }`}
     >
       <video
