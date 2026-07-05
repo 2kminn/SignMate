@@ -5,7 +5,7 @@
     {
       "index": 0,
       "id": 0,
-      "label": "wait",
+      "label": "idle",
       "name": "대기"
     },
     {
@@ -67,6 +67,12 @@
       "id": 14,
       "label": "name",
       "name": "이름"
+    },
+    {
+      "index": 11,
+      "id": 55,
+      "label": "wait",
+      "name": "대애기"
     }
   ]
 }
