@@ -70,6 +70,27 @@ button {
   will-change: transform, opacity, filter;
 }
 
+.onboarding-visual {
+  max-width: min(280px, 31vh);
+}
+
+@media (max-height: 740px) {
+  .onboarding-slide {
+    padding-bottom: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .onboarding-visual {
+    max-width: min(220px, 29vh);
+    border-radius: 2rem;
+  }
+
+  .onboarding-eyebrow,
+  .onboarding-title-without-eyebrow {
+    margin-top: 0.75rem;
+  }
+}
+
 @media (min-width: 431px) {
   body {
     padding: 1.5rem 0;

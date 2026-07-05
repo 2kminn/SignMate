@@ -2,6 +2,7 @@ import {
   BadgeCheck,
   BookOpen,
   Camera,
+  ChevronLeft,
   ChevronRight,
   Hand,
   ScanLine,
@@ -67,23 +68,39 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     setStepIndex((current) => current + 1);
   };
 
+  const goToPreviousStep = () => {
+    setStepIndex((current) => Math.max(0, current - 1));
+  };
+
   return (
-    <main className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#F0FDF4_0%,#F9FAFB_72%)] px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+    <main className="flex h-[100dvh] min-h-[100svh] max-h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#F0FDF4_0%,#F9FAFB_72%)] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm font-black tracking-tight text-sign-deep">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sign-main text-white">
-            <Hand size={19} aria-hidden="true" />
+        <div className="flex items-center gap-2">
+          {stepIndex > 0 && (
+            <button
+              type="button"
+              onClick={goToPreviousStep}
+              aria-label="이전 설명으로 돌아가기"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-sign-border bg-white text-sign-deep shadow-sm transition hover:bg-sign-soft"
+            >
+              <ChevronLeft size={21} aria-hidden="true" />
+            </button>
+          )}
+          <span className="flex items-center gap-2 text-sm font-black tracking-tight text-sign-deep">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sign-main text-white">
+              <Hand size={19} aria-hidden="true" />
+            </span>
+            SignMate
           </span>
-          SignMate
-        </span>
+        </div>
         <span className="text-xs font-bold text-sign-sub">{stepIndex + 1} / {steps.length}</span>
       </div>
 
       <section
         key={stepIndex}
-        className="onboarding-slide my-auto py-10 text-center"
+        className="onboarding-slide my-auto min-h-0 py-5 text-center"
       >
-        <div className="relative mx-auto flex aspect-square w-full max-w-[280px] items-center justify-center overflow-hidden rounded-[40px] border border-sign-border bg-white shadow-[0_20px_60px_rgba(6,78,59,.1)]">
+        <div className="onboarding-visual relative mx-auto flex aspect-square w-full items-center justify-center overflow-hidden rounded-[40px] border border-sign-border bg-white shadow-[0_20px_60px_rgba(6,78,59,.1)]">
           <span className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-sign-light opacity-70" />
           <span className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-sign-soft" />
           <span className="relative flex h-28 w-28 items-center justify-center rounded-[32px] bg-sign-main text-white shadow-[0_16px_32px_rgba(16,185,129,.25)]">
@@ -95,16 +112,16 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
         </div>
 
         {step.eyebrow && (
-          <p className="mt-8 text-xs font-extrabold tracking-[0.16em] text-sign-main">{step.eyebrow}</p>
+          <p className="onboarding-eyebrow mt-6 text-xs font-extrabold tracking-[0.16em] text-sign-main">{step.eyebrow}</p>
         )}
-        <h1 className={`${step.eyebrow ? "mt-3" : "mt-8"} whitespace-pre-line text-3xl font-black leading-tight tracking-[-0.04em] text-sign-deep`}>
+        <h1 className={`${step.eyebrow ? "mt-2" : "onboarding-title-without-eyebrow mt-6"} whitespace-pre-line text-3xl font-black leading-tight tracking-[-0.04em] text-sign-deep`}>
           {step.title}
         </h1>
-        <p className="mt-4 whitespace-pre-line text-base leading-7 text-sign-sub">{step.description}</p>
+        <p className="mt-3 whitespace-pre-line text-base leading-6 text-sign-sub">{step.description}</p>
       </section>
 
-      <div>
-        <div className="mb-5 flex justify-center gap-2" aria-label={`온보딩 ${stepIndex + 1}단계`}>
+      <div className="shrink-0">
+        <div className="mb-3 flex justify-center gap-2" aria-label={`온보딩 ${stepIndex + 1}단계`}>
           {steps.map((_, index) => (
             <span
               key={index}
